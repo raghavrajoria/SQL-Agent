@@ -1,0 +1,12 @@
+sqlalchemy
+pymysql
+groq
+sentence-transformers
+chromadb
+langgraph
+langchain-core
+fastapi
+uvicorn
+streamlit
+python-dotenv
+faker
