@@ -112,11 +112,16 @@ def _extract_sql(raw_text: str) -> str:
     return text.strip()
 
 
-def generate_sql(question: str, ranked_context: dict) -> dict:
+def generate_sql(question: str, ranked_context: dict, error_context: dict | None = None) -> dict:
     """
     Args:
         question: the user's natural language question
         ranked_context: output of rank_schema_context.rank_schema_context()
+        error_context: optional, used for retries after a failed attempt.
+                         {"previous_sql": "...", "error_message": "..."}
+                         When provided, the prompt includes the failed query
+                         and the exact error, asking the model to fix it --
+                         this is what the self-correction loop uses.
 
     Returns:
         {
@@ -128,12 +133,25 @@ def generate_sql(question: str, ranked_context: dict) -> dict:
     schema_catalog = load_schema_catalog()
     schema_context_str = build_schema_context_string(ranked_context, schema_catalog)
 
+    retry_block = ""
+    if error_context:
+        retry_block = f"""
+
+YOUR PREVIOUS ATTEMPT FAILED. Fix it.
+Previous SQL:
+{error_context['previous_sql']}
+
+Database error:
+{error_context['error_message']}
+
+Generate a corrected query that fixes this specific error. Follow all the same rules."""
+
     user_prompt = f"""SCHEMA CONTEXT:
 
 {schema_context_str}
 
 QUESTION:
-{question}
+{question}{retry_block}
 
 SQL:"""
 

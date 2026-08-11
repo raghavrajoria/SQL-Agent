@@ -10,3 +10,6 @@ uvicorn
 streamlit
 python-dotenv
 faker
+python-jose[cryptography]
+bcrypt
+python-multipart
